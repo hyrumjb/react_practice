@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import './App.css';
 
 import backgroundImg from './images/background.jpg';
@@ -26,7 +26,6 @@ function App() {
   const [userName, setUserName] = useState(() => {
     return localStorage.getItem("userName") || "";
   });
-
   const [inputName, setInputName] = useState("");
 
   const handleNameSubmit = (e) => {
@@ -42,46 +41,58 @@ function App() {
 
   // Navigation bar
   const [navOpen, setNavOpen] = useState(false);
-  const [showImages, setShowImages] = useState(true);
-  const [showSettings, setShowSettings] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState("");
 
   const toggleNav = () => {
     setNavOpen(prev => !prev);
   };
 
+  //Settings box
+  const [showSettings, setShowSettings] = useState(true);
+
+  //Images toggle button
+  const imageRefs = useRef([]);
+  const [showImages, setShowImages] = useState(true);
+
   const toggleImages = () => {
-    document.querySelectorAll("img").forEach(image => {
-      image.classList.toggle("hidden");
+    imageRefs.current.forEach(img => {
+      if (img) img.classList.toggle("hidden");
     });
     setShowImages(prev => !prev);
   };
 
+  // Month selector
+  const [userMonth, setUserMonth] = useState(() => {
+    return localStorage.getItem("userMonth") || "";
+  })
+  const [inputMonth, setInputMonth] = useState("");
+
   const handleMonthChange = (e) => {
-    setSelectedMonth(e.target.value);
+    setInputMonth(e.target.value);
   };
 
   const handleMonthSubmit = (e) => {
     e.preventDefault();
-    if (selectedMonth) {
-      localStorage.setItem("month", selectedMonth);
+    if (inputMonth) {
+      localStorage.setItem("userMonth", inputMonth);
+      setUserMonth(inputMonth);
+      setInputMonth("");
     } else {
       alert("Try inputting month again ...");
     }
   };
 
+  // Key-based color switcher
   const switchColors = useCallback((color) => {
-    document.body.classList.remove("violet", "blue");
-    document.body.classList.add(color);
-    const footerElement = document.getElementById("footer-light");
-    if (footerElement) {
-      footerElement.classList.add("highlight");
-    }
+    document.body.classList.toggle(color)
   }, []);
 
   const handleKey = useCallback((e) => {
-    if (e.key === "v") switchColors("violet");
-    if (e.key === "b") switchColors("blue");
+    if (e.key === "v") {
+      switchColors("violet");
+    }
+    if (e.key === "b") {
+      switchColors("blue");
+    }
   }, [switchColors]);
 
   useEffect(() => {
@@ -134,7 +145,7 @@ function App() {
         </div>
 
         {navOpen && (
-          <div id="my-nav" className="side-nav" role="navigation">
+          <div className="side-nav" role="navigation">
             <div className="side-nav-content">
               <span
                 id="close-nav"
@@ -162,11 +173,16 @@ function App() {
       <main>
         {userName && (
           <div className="welcome-banner">
-            <p>Welcome, {userName}! Glad to have you back exploring Silicon Slopes.</p>
+            <p>Welcome, {userName}! Glad to have you back exploring Silicon Slopes. ({userMonth})</p>
           </div>
         )}
 
-        <img src={backgroundImg} alt="Salt Lake City skyline" id="main-image" />
+        <img 
+          ref={(el) => { if (el) imageRefs.current[0] = el }}
+          src={backgroundImg}
+          alt="Salt Lake City skyline"
+          id="main-image"
+        />
         
         {showSettings && (
           <div id="settings">
@@ -203,7 +219,7 @@ function App() {
               <label htmlFor="month-select">Select month: </label>
               <select
                 id="month-select"
-                value={selectedMonth}
+                value={inputMonth}
                 onChange={(e) => setInputMonth(e.target.value)}
               >
                 <option value="">--Select Month--</option>
@@ -212,7 +228,7 @@ function App() {
                   'May', 'June', 'July', 'August',
                   'September', 'October', 'November', 'December'
                 ].map(month => (
-                  <option key={month} value={month.toLowerCase()}>{month}</option>
+                  <option key={month} value={month}>{month}</option>
                 ))}
               </select>
               <input type="submit" id="submit" value="Submit" />
@@ -235,7 +251,13 @@ function App() {
         <div id="section-1">
           <h2>Ryan Smith</h2>
           <div className="content">
-            {showImages && <img src={ryanImg} alt="biographical image" />}
+            {showImages && (
+              <img
+                ref={(el) => { if (el) imageRefs.current[1] = el }}
+                src={ryanImg} 
+                alt="biographical image" 
+              />
+            )}
             <div className="text-content">
               <h3>Company:</h3><p>Qualtrics (Co-founder & Executive Chairman)</p>
               <h3>Company Valuation:</h3><p>$12.5 billion (2023 acquired by Silver Lake)</p>
@@ -256,14 +278,26 @@ function App() {
               <h3>Estimated Net Worth:</h3><p>Unknown (roughly $455 million)</p>
               <h3>Career Bio:</h3><p>Aaron Skonnard co-founded Pluralsight in 2004, initially offering classroom training before transitioning to an online platform for tech professionals. Under his guidance, Pluralsight became a prominent online learning company, serving a vast enterprise clientele.</p>
             </div>
-            {showImages && <img src={aaronImg} alt="biographical image" />}
+            {showImages && (
+              <img
+                ref={(el) => { if (el) imageRefs.current[2] = el }}
+                src={aaronImg} 
+                alt="biographical image" 
+              />
+            )}
           </div>
         </div>
 
         <div id="section-3">
           <h2>Josh James</h2>
           <div className="content">
-            {showImages && <img src={joshImg} alt="biographical image" />}
+            {showImages && (
+              <img
+                ref={(el) => { if (el) imageRefs.current[3] = el }}
+                src={joshImg} 
+                alt="biographical image" 
+              />
+            )}
             <div className="text-content">
               <h3>Company:</h3><p>Domo (Founder & Former CEO); previously co-founded Omniture</p>
               <h3>Company Valuation:</h3><p>Domo: $308 million, Omniture: $1.8 billion (2009 acquired by Adobe)</p>
@@ -284,7 +318,13 @@ function App() {
               <h3>Estimated Net Worth:</h3><p>Unknown (roughly $450 million)</p>
               <h3>Career Bio:</h3><p>Eric Rea co-founded Podium in 2014, transforming it from a small startup into a leading customer interaction platform for local businesses. Under his leadership, Podium expanded its offerings to include messaging and payment solutions, serving a broad client base.</p>
             </div>
-            {showImages && <img src={ericImg} alt="biographical image" />}
+            {showImages && (
+              <img
+                ref={(el) => { if (el) imageRefs.current[4] = el }}
+                src={ericImg} 
+                alt="biographical image" 
+              />
+            )}
           </div>
         </div>
       </main>
